@@ -35,6 +35,20 @@
   version = "v1.4.7"
 
 [[projects]]
+  name = "github.com/go-redis/redis"
+  packages = [
+    ".",
+    "internal",
+    "internal/consistenthash",
+    "internal/hashtag",
+    "internal/pool",
+    "internal/proto",
+    "internal/util"
+  ]
+  revision = "75795aa4236dc7341eefac3bbe945e68c99ef9df"
+  version = "v6.15.3"
+
+[[projects]]
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
@@ -56,6 +70,12 @@
   ]
   revision = "8cb6e5b959231cc1119e43259c4a608f9c51a241"
   version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/imdario/mergo"
+  packages = ["."]
+  revision = "7c29201646fa3de8506f701213473dd407f19646"
+  version = "v0.3.7"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -92,6 +112,28 @@
   packages = ["."]
   revision = "3536a929edddb9a5b34bd6861dc4a9647cb459fe"
   version = "v1.1.2"
+
+[[projects]]
+  name = "github.com/nats-io/go-nats"
+  packages = [
+    ".",
+    "encoders/builtin",
+    "util"
+  ]
+  revision = "70fe06cee50d4b6f98248d9675fb55f2a3aa7228"
+  version = "v1.7.2"
+
+[[projects]]
+  name = "github.com/nats-io/nkeys"
+  packages = ["."]
+  revision = "1546a3320a8f195a5b5c84aef8309377c2e411d5"
+  version = "v0.0.2"
+
+[[projects]]
+  name = "github.com/nats-io/nuid"
+  packages = ["."]
+  revision = "4b96681fa6d28dd0ab5fe79bac63b3a493d9ee94"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/pelletier/go-toml"
@@ -197,6 +239,24 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/xaque208/rftoy"
+  packages = ["rftoy"]
+  revision = "68da7ed29fcb6fde19745d64a8bfa5d539ed8a69"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/xaque208/things"
+  packages = ["things"]
+  revision = "bd17b90bf357ec30d7cd5b62ba281249ba598b04"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/xaque208/znet"
+  packages = ["znet"]
+  revision = "d1d20dc1fc266f327b61ac507d4de76a4b684997"
+
+[[projects]]
+  branch = "master"
   name = "github.com/ziutek/telnet"
   packages = ["."]
   revision = "c3b780dc415b28894076b4ec975ea3ea69e3980f"
@@ -248,6 +308,18 @@
   version = "v2.2.6"
 
 [[projects]]
+  name = "gopkg.in/asn1-ber.v1"
+  packages = ["."]
+  revision = "f715ec2f112d1e4195b827ad68cf44017a3ef2b1"
+  version = "v1.3"
+
+[[projects]]
+  name = "gopkg.in/ldap.v2"
+  packages = ["."]
+  revision = "bb7a9ca6e4fbc2129e3db588a34bc970ffe811a9"
+  version = "v2.5.1"
+
+[[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
@@ -256,6 +328,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "391e1f4700ed40d0b8c0d48e6a74a67f122cb2f645c75d64d9cda5fa12105cd9"
+  inputs-digest = "9af1420da51ff56d83d847f643745b9d096421932fd9c475177720c402878c07"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -2,12 +2,13 @@ package exporter
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
 )
 
+// HealthStatus represents the availability of the components for this exporter.
 type HealthStatus struct{}
 
 func statusHandler(w http.ResponseWriter, r *http.Request) {
@@ -20,9 +21,13 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write(bytes)
+	_, err = w.Write(bytes)
+	if err != nil {
+		log.Error(err)
+	}
 }
 
+// StartMetricsServer is spawned in a Go routine to listen on http for /metrics requests.
 func StartMetricsServer(bindAddr string) {
 	d := http.NewServeMux()
 	d.Handle("/metrics", promhttp.Handler())

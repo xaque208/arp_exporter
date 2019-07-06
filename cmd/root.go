@@ -10,11 +10,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/xaque208/junos_exporter/exporter"
+	"github.com/xaque208/arp_exporter/exporter"
+	"github.com/xaque208/znet/znet"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "junos_exporter",
+	Use:   "arp_exporter",
 	Short: "Export Junos ARP data Pometheus",
 	Long:  "",
 	Run:   run,
@@ -39,15 +40,21 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Increase verbosity")
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.junos_exporter.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.arp_exporter.yaml)")
 	rootCmd.PersistentFlags().StringVarP(&listenAddress, "listen", "L", ":9100", "The listen address (default is :9100")
 	rootCmd.PersistentFlags().IntVarP(&interval, "interval", "i", 30, "The interval at which to update the data")
 	rootCmd.PersistentFlags().StringVarP(&junosUsername, "username", "", "", "The Junos username")
 	rootCmd.PersistentFlags().StringVarP(&junosPassword, "password", "", "", "The Junos password")
 
-	rootCmd.MarkPersistentFlagRequired("config")
+	err := rootCmd.MarkPersistentFlagRequired("config")
+	if err != nil {
+		log.Error(err)
+	}
 
-	viper.SetDefault("interval", 30)
+	err = viper.BindPFlag("interval", rootCmd.PersistentFlags().Lookup("interval"))
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 // initConfig reads in the config file and ENV variables if set.
@@ -62,9 +69,9 @@ func initConfig() {
 			log.Fatal(err)
 		}
 
-		// Search config in home directory with name ".junos_exporter" (without extension).
+		// Search config in home directory with name ".arp_exporter" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".junos_exporter")
+		viper.SetConfigName(".arp_exporter")
 	}
 
 	viper.AutomaticEnv()
@@ -82,10 +89,14 @@ func run(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.InfoLevel)
 	}
 
-	hosts := viper.GetStringSlice("junos.hosts")
-	if len(hosts) == 0 {
-		log.Fatal("List of hosts is required")
+	z := znet.Znet{}
+	z.LoadConfig(cfgFile)
+
+	l, err := z.NewLDAPClient(z.Config.Ldap)
+	if err != nil {
+		log.Error(err)
 	}
+	defer l.Close()
 
 	auth := &junos.AuthMethod{
 		Username:   viper.GetString("junos.username"),
@@ -97,8 +108,19 @@ func run(cmd *cobra.Command, args []string) {
 
 	interval = viper.GetInt("interval")
 	log.Debugf("Tick interval: %d", interval)
-	for range time.Tick(time.Duration(interval) * time.Second) {
-		log.Debug("Scraping metrics from Junos")
+
+	ticker := time.NewTicker(time.Duration(interval) * time.Second)
+
+	// Scrape the metrics
+	// go func() {
+	for range ticker.C {
+		hosts := z.GetNetworkHosts(l, z.Config.Ldap.BaseDN)
+		if len(hosts) == 0 {
+			log.Fatal("List of hosts is required")
+		}
+
 		exporter.ScrapeMetrics(auth, hosts)
 	}
+	// }()
+
 }
