@@ -2,3 +2,7 @@
   non-go = true
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/xaque208/znet"
+  branch  = "master"

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/xaque208/junos_exporter/cmd"
+	"github.com/xaque208/arp_exporter/cmd"
 )
 
 func main() {
