@@ -134,14 +134,14 @@ func ScrapeMetrics(auth *junos.AuthMethod, hosts []znet.NetworkHost) {
 
 			// }()
 		}
-
-		log.Debugf("KnownHosts %d", knownHosts)
-		log.Debugf("UnknownHosts %d", unknownHosts)
-		log.Debugf("WatchHosts %d", watchHosts)
-
-		goodScrapeCountMetric.Set(float64(goodScrape))
-		knownHostsMetric.Set(float64(knownHosts))
-		unknownHostsMetric.Set(float64(unknownHosts))
-
 	}
+
+	log.Debugf("KnownHosts %d", knownHosts)
+	log.Debugf("UnknownHosts %d", unknownHosts)
+	log.Debugf("WatchHosts %d", watchHosts)
+
+	goodScrapeCountMetric.Set(float64(goodScrape))
+	knownHostsMetric.Set(float64(knownHosts))
+	unknownHostsMetric.Set(float64(unknownHosts))
+
 }
