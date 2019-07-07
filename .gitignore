@@ -1,2 +1,2 @@
-config.*
-bin/
+/config.*
+/bin/
