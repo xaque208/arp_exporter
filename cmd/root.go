@@ -42,7 +42,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Increase verbosity")
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.arp_exporter.yaml)")
 	rootCmd.PersistentFlags().StringVarP(&listenAddress, "listen", "L", ":9100", "The listen address (default is :9100")
-	rootCmd.PersistentFlags().IntVarP(&interval, "interval", "i", 30, "The interval at which to update the data")
+	rootCmd.PersistentFlags().IntVarP(&interval, "interval", "i", 60, "The interval at which to update the data")
 	rootCmd.PersistentFlags().StringVarP(&junosUsername, "username", "", "", "The Junos username")
 	rootCmd.PersistentFlags().StringVarP(&junosPassword, "password", "", "", "The Junos password")
 
