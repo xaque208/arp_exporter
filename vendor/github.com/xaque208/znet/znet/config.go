@@ -4,19 +4,33 @@ import (
 	"fmt"
 )
 
+// Config stores the items that are required to configure this project.
 type Config struct {
-	Rooms    []Room      `yaml:"rooms"`
-	Endpoint string      `yaml:"endpoint"`
-	Nats     NatsConfig  `yaml:"nats,omitempty"`
-	Junos    NatsConfig  `yaml:"junos,omitempty"`
-	Redis    RedisConfig `yaml:"redis,omitempty"`
-	HTTP     HTTPConfig  `yaml:"http,omitempty"`
-	Ldap     LdapConfig  `yaml:"ldap,omitempty"`
+	Rooms        []Room              `yaml:"rooms,omitempty"`
+	Endpoint     string              `yaml:"endpoint,omitempty"`
+	Environments []EnvironmentConfig `yaml:"environments,omitempty"`
+	Nats         NatsConfig          `yaml:"nats,omitempty"`
+	Hue          HueConfig           `yaml:"hue,omitempty"`
+	Junos        JunosConfig         `yaml:"junos,omitempty"`
+	Redis        RedisConfig         `yaml:"redis,omitempty"`
+	HTTP         HTTPConfig          `yaml:"http,omitempty"`
+	LDAP         LDAPConfig          `yaml:"ldap,omitempty"`
+	Vault        VaultConfig         `yaml:"vault,omitempty"`
+}
+
+type EnvironmentConfig struct {
+	Name         string   `yaml:"name,omitempty"`
+	SecretValues []string `yaml:"secret_values,omitempty"`
 }
 
 type NatsConfig struct {
 	URL   string
 	Topic string
+}
+
+type HueConfig struct {
+	Endpoint string `yaml:"endpoint"`
+	User     string `yaml:"user"`
 }
 
 type RedisConfig struct {
@@ -33,16 +47,24 @@ type HTTPConfig struct {
 	ListenAddress string
 }
 
-type LdapConfig struct {
-	BaseDN string
-	BindDN string
-	BindPW string
-	Host   string
+type LDAPConfig struct {
+	BaseDN    string
+	BindDN    string
+	BindPW    string
+	Host      string
+	UnknownDN string
+}
+
+type VaultConfig struct {
+	Host      string
+	TokenPath string `yaml:"token_path,omitempty"`
+	VaultPath string `yaml:"vault_path,omitempty"`
 }
 
 type Room struct {
-	Name string `yaml:"name"`
-	IDs  []int  `yaml:"ids"`
+	Name   string `yaml:"name"`
+	IDs    []int  `yaml:"ids"`
+	HueIDs []int  `yaml:"hue"`
 }
 
 func (c *Config) Room(name string) (Room, error) {

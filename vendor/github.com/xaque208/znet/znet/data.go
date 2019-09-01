@@ -8,15 +8,17 @@ type Data struct {
 }
 
 type HostData struct {
-	NTPServers            []string              `yaml:"ntp_servers"`
-	DHCPServer            string                `yaml:"dhcp_server"`
-	DHCPForwardInterfaces []string              `yaml:"dhcp_forward_interfaces"`
-	LLDPInterfaces        []string              `yaml:"lldp_interfaces"`
-	IRBInterfaces         []IRBInterface        `yaml:"irb_interfaces"`
 	AEInterfaces          []AEInterface         `yaml:"ae_interfaces"`
-	EthernetInterfaces    []EthernetInterface   `yaml:"eth_interfaces"`
-	RouterAdvertisements  []RouterAdvertisement `yaml:"router_advertisements"`
 	BGP                   BGP                   `yaml:"bgp"`
+	DHCPForwardInterfaces []string              `yaml:"dhcp_forward_interfaces"`
+	DHCPServer            string                `yaml:"dhcp_server"`
+	EthernetInterfaces    []EthernetInterface   `yaml:"eth_interfaces"`
+	IRBInterfaces         []IRBInterface        `yaml:"irb_interfaces"`
+	LLDPInterfaces        []string              `yaml:"lldp_interfaces"`
+	NTPServers            []string              `yaml:"ntp_servers"`
+	RouterAdvertisements  []RouterAdvertisement `yaml:"router_advertisements"`
+	Routing               Routing               `yaml:"routing"`
+	PolicyOptions         PolicyOptions         `yaml:"policy_options"`
 	Security              Security              `yaml:"security"`
 	VLANs                 []VLAN                `yaml:"vlans"`
 }
@@ -80,6 +82,37 @@ type BGP struct {
 	Groups []BGPGroup `yaml:"groups"`
 }
 
+type Routing struct {
+	RouterID     string       `yaml:"router_id"`
+	ASN          int          `yaml:"asn"`
+	StaticRoutes StaticRoutes `yaml:"static_routes"`
+}
+
+type PolicyOptions struct {
+	Statements map[string]PolicyStatement `yaml:"statements"`
+}
+
+type PolicyStatement struct {
+	Name  string       `yaml:"name"`
+	Terms []PolicyTerm `yaml:"terms"`
+	Then  string       `yaml:"then"`
+}
+
+type PolicyTerm struct {
+	From []string `yaml:"from"`
+	Then string   `yaml:"then"`
+}
+
+type StaticRoutes struct {
+	Inet  []StaticRoute `yaml:"inet"`
+	Inet6 []StaticRoute `yaml:"inet6"`
+}
+
+type StaticRoute struct {
+	Prefix  string `yaml:"prefix"`
+	NextHop string `yaml:"next_hop"`
+}
+
 type BGPGroup struct {
 	Name      string   `yaml:"name"`
 	Type      string   `yaml:"type"`
@@ -102,6 +135,12 @@ type IRBInterface struct {
 	MTU   int      `yaml:"mtu"`
 }
 
+type InetUnit struct {
+	Inet  []string `yaml:"inet"`
+	Inet6 []string `yaml:"inet6"`
+	MTU   int      `yaml:"mtu"`
+}
+
 type AEInterface struct {
 	Description string `yaml:"description"`
 	Name        string `yaml:"name"`
@@ -111,6 +150,7 @@ type AEInterface struct {
 		LACP         []string `yaml:"lacp"`
 	} `yaml:"options"`
 	EthernetSwitching EthernetSwitching `yaml:"ethernet_switching"`
+	Units             []InetUnit        `yaml:"units,omitempty"`
 }
 
 type EthernetInterface struct {
@@ -123,9 +163,9 @@ type EthernetInterface struct {
 }
 
 type EthernetSwitching struct {
-	Mode         string   `yaml:"mode"`
-	StormControl string   `yaml:"storm_control"`
-	VLANs        []string `yaml:"vlans"`
+	Mode         string   `yaml:"mode,omitempty"`
+	StormControl string   `yaml:"storm_control,omitempty"`
+	VLANs        []string `yaml:"vlans,omitempty"`
 }
 
 type VLAN struct {
