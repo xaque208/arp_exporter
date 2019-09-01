@@ -33,6 +33,11 @@ var (
 	unknownHostsMetric = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "arp_unknown_hosts",
 	})
+
+	arpEntriesMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "arp_entries",
+		Help: "Entries from the ARP table",
+	}, []string{"state"})
 )
 
 func init() {
@@ -41,6 +46,7 @@ func init() {
 		knownHostsMetric,
 		scrapeDurationMetric,
 		unknownHostsMetric,
+		arpEntriesMetric,
 	)
 }
 
@@ -74,7 +80,7 @@ func noramlMAC(mac string) string {
 }
 
 // ScrapeMetrics performs the necessary calls to retreive the current arp tables from each device.
-func ScrapeMetrics(auth *junos.AuthMethod, hosts []znet.NetworkHost) {
+func ScrapeMetrics(auth *junos.AuthMethod, hosts []znet.NetworkHost, unknownChan chan junos.ArpEntry) {
 	goodScrape := 0
 	knownHosts := 0
 	unknownHosts := 0
@@ -118,8 +124,8 @@ func ScrapeMetrics(auth *junos.AuthMethod, hosts []znet.NetworkHost) {
 				if hasMAC(arp.MACAddress, hosts) {
 					knownHosts++
 				} else {
-					log.Debugf("Unmatched host: %+v", arp)
 					unknownHosts++
+					unknownChan <- arp
 				}
 
 				if watchMAC(arp.MACAddress, hosts) {
@@ -141,7 +147,7 @@ func ScrapeMetrics(auth *junos.AuthMethod, hosts []znet.NetworkHost) {
 	log.Debugf("WatchHosts %d", watchHosts)
 
 	goodScrapeCountMetric.Set(float64(goodScrape))
-	knownHostsMetric.Set(float64(knownHosts))
-	unknownHostsMetric.Set(float64(unknownHosts))
+	arpEntriesMetric.WithLabelValues("known").Set(float64(knownHosts))
+	arpEntriesMetric.WithLabelValues("unknown").Set(float64(unknownHosts))
 
 }

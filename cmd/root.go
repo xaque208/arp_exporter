@@ -30,6 +30,7 @@ var (
 	junosPassword string
 )
 
+// Execute performs the command execution.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -92,7 +93,7 @@ func run(cmd *cobra.Command, args []string) {
 	z := znet.Znet{}
 	z.LoadConfig(cfgFile)
 
-	l, err := z.NewLDAPClient(z.Config.Ldap)
+	l, err := z.NewLDAPClient(z.Config.LDAP)
 	if err != nil {
 		log.Error(err)
 	}
@@ -111,15 +112,31 @@ func run(cmd *cobra.Command, args []string) {
 
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 
+	hostRecorder := make(chan junos.ArpEntry, 100)
+
+	go func() {
+		for arp := range hostRecorder {
+			log.Debugf("Should record host : %+v", arp)
+			err = z.RecordUnknownHost(l, z.Config.LDAP.UnknownDN, arp.IPAddress, arp.MACAddress)
+			if err != nil {
+				log.Error(err)
+			}
+		}
+	}()
+
 	// Scrape the metrics
 	// go func() {
 	for range ticker.C {
-		hosts := z.GetNetworkHosts(l, z.Config.Ldap.BaseDN)
-		if len(hosts) == 0 {
-			log.Fatal("List of hosts is required")
+		hosts, err := z.GetNetworkHosts(l, z.Config.LDAP.BaseDN)
+		if err != nil {
+			log.Error(err)
 		}
 
-		exporter.ScrapeMetrics(auth, hosts)
+		if len(hosts) == 0 {
+			log.Error("List of hosts is required")
+		}
+
+		exporter.ScrapeMetrics(auth, hosts, hostRecorder)
 	}
 	// }()
 
