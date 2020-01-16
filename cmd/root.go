@@ -116,7 +116,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	go func() {
 		for arp := range hostRecorder {
-			log.Debugf("Should record host : %+v", arp)
+			log.Debugf("Recording unknown host: %+v", arp)
 			err = z.RecordUnknownHost(l, z.Config.LDAP.UnknownDN, arp.IPAddress, arp.MACAddress)
 			if err != nil {
 				log.Error(err)
