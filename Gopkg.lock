@@ -248,8 +248,8 @@
     "log",
     "model"
   ]
-  revision = "31bed53e4047fd6c510e43a941f90cb31be0972a"
-  version = "v0.6.0"
+  revision = "287d3e634a1e550c9e463dd7e5a75a422c614505"
+  version = "v0.7.0"
 
 [[projects]]
   name = "github.com/prometheus/procfs"
@@ -328,7 +328,7 @@
   branch = "master"
   name = "github.com/xaque208/rftoy"
   packages = ["rftoy"]
-  revision = "68da7ed29fcb6fde19745d64a8bfa5d539ed8a69"
+  revision = "4727b87c34619533519abb4260afd477833e265b"
 
 [[projects]]
   branch = "master"
@@ -343,7 +343,7 @@
     "rpc",
     "znet"
   ]
-  revision = "171d362f03741306528f80150e482ba8b831e896"
+  revision = "64470dd6799d5be447a44a0eee9d670e6efd76b0"
 
 [[projects]]
   branch = "master"

@@ -90,14 +90,10 @@ func run(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.InfoLevel)
 	}
 
-	z := znet.Znet{}
-	z.LoadConfig(cfgFile)
-
-	l, err := z.NewLDAPClient(z.Config.LDAP)
+	z, err := znet.NewZnet(cfgFile)
 	if err != nil {
 		log.Error(err)
 	}
-	defer l.Close()
 
 	auth := &junos.AuthMethod{
 		Username:   viper.GetString("junos.username"),
@@ -117,7 +113,7 @@ func run(cmd *cobra.Command, args []string) {
 	go func() {
 		for arp := range hostRecorder {
 			log.Debugf("Recording unknown host: %+v", arp)
-			err = z.RecordUnknownHost(l, z.Config.LDAP.UnknownDN, arp.IPAddress, arp.MACAddress)
+			err = z.RecordUnknownHost(z.Config.LDAP.UnknownDN, arp.IPAddress, arp.MACAddress)
 			if err != nil {
 				log.Error(err)
 			}
@@ -127,7 +123,7 @@ func run(cmd *cobra.Command, args []string) {
 	// Scrape the metrics
 	// go func() {
 	for range ticker.C {
-		hosts, err := z.GetNetworkHosts(l, z.Config.LDAP.BaseDN)
+		hosts, err := z.Inventory.NetworkHosts()
 		if err != nil {
 			log.Error(err)
 		}
