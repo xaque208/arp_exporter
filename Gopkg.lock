@@ -56,7 +56,13 @@
 
 [[projects]]
   name = "github.com/golang/protobuf"
-  packages = ["proto"]
+  packages = [
+    "proto",
+    "ptypes",
+    "ptypes/any",
+    "ptypes/duration",
+    "ptypes/timestamp"
+  ]
   revision = "6c65a5562fc06764971b7c5d05c76c75e84bdbf7"
   version = "v1.3.2"
 
@@ -325,16 +331,19 @@
   revision = "68da7ed29fcb6fde19745d64a8bfa5d539ed8a69"
 
 [[projects]]
+  branch = "master"
   name = "github.com/xaque208/things"
   packages = ["things"]
-  revision = "9e455e89effb48f85247a3e999824bd3bf4b2eac"
-  version = "v0.0.2"
+  revision = "32b63548ad25b007268340d9dde0b7319f184e4f"
 
 [[projects]]
   branch = "master"
   name = "github.com/xaque208/znet"
-  packages = ["znet"]
-  revision = "f4433b1dabed9dcd328823d9e1fffcf792718f7c"
+  packages = [
+    "rpc",
+    "znet"
+  ]
+  revision = "171d362f03741306528f80150e482ba8b831e896"
 
 [[projects]]
   branch = "master"
@@ -365,7 +374,9 @@
     "http/httpguts",
     "http2",
     "http2/hpack",
-    "idna"
+    "idna",
+    "internal/timeseries",
+    "trace"
   ]
   revision = "ba9fcec4b297b415637633c5a6e8fa592e4a16c3"
 
@@ -409,6 +420,55 @@
   name = "golang.org/x/time"
   packages = ["rate"]
   revision = "9d24e82272b4f38b78bc8cff74fa936d31ccd8ef"
+
+[[projects]]
+  branch = "master"
+  name = "google.golang.org/genproto"
+  packages = ["googleapis/rpc/status"]
+  revision = "ca5a22157cba8746e7aa978de1b1ac4085150840"
+
+[[projects]]
+  name = "google.golang.org/grpc"
+  packages = [
+    ".",
+    "attributes",
+    "backoff",
+    "balancer",
+    "balancer/base",
+    "balancer/roundrobin",
+    "binarylog/grpc_binarylog_v1",
+    "codes",
+    "connectivity",
+    "credentials",
+    "credentials/internal",
+    "encoding",
+    "encoding/proto",
+    "grpclog",
+    "internal",
+    "internal/backoff",
+    "internal/balancerload",
+    "internal/binarylog",
+    "internal/buffer",
+    "internal/channelz",
+    "internal/envconfig",
+    "internal/grpcrand",
+    "internal/grpcsync",
+    "internal/resolver/dns",
+    "internal/resolver/passthrough",
+    "internal/syscall",
+    "internal/transport",
+    "keepalive",
+    "metadata",
+    "naming",
+    "peer",
+    "resolver",
+    "serviceconfig",
+    "stats",
+    "status",
+    "tap"
+  ]
+  revision = "f5b0812e6fe574d90da76b205e9eb51f6ddb1919"
+  version = "v1.26.0"
 
 [[projects]]
   name = "gopkg.in/alecthomas/kingpin.v2"

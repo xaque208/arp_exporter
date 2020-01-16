@@ -2,9 +2,14 @@ package znet
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net"
+	"os"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 
 	ldap "gopkg.in/ldap.v2"
 )
@@ -51,7 +56,7 @@ func (z *Znet) RecordUnknownHost(l *ldap.Conn, baseDN string, address string, ma
 		nil,
 	)
 
-	log.Infof("Searching LDAP with query: %s", searchRequest.Filter)
+	log.Debugf("Searching LDAP with query: %s", searchRequest.Filter)
 
 	sr, err := l.Search(searchRequest)
 	if err != nil {
@@ -81,79 +86,79 @@ func (z *Znet) RecordUnknownHost(l *ldap.Conn, baseDN string, address string, ma
 	return nil
 }
 
-// GetNetworkHosts retrieves the NetworkHost objects from LDAP given an LDPA connection and baseDN.
-func (z *Znet) GetNetworkHosts(l *ldap.Conn, baseDN string) ([]NetworkHost, error) {
-	hosts := []NetworkHost{}
+func (h *NetworkHost) Update() (*ssh.Conn, error) {
 
-	searchRequest := ldap.NewSearchRequest(
-		baseDN,
-		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
-		"(&(objectClass=netHost)(cn=*))",
-		defaultHostAttributes,
-		nil,
-	)
+	sshConfig := &ssh.ClientConfig{
+		User: "zach",
+		Auth: []ssh.AuthMethod{
+			PublicKeyFile("/home/zach/.ssh/id_ed25519"),
+			SSHAgent(),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
 
-	log.Infof("Searching LDAP with query: %s", searchRequest.Filter)
+	log.Warnf("%+v", sshConfig)
 
-	sr, err := l.Search(searchRequest)
+	connection, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", h.HostName, 22), sshConfig)
 	if err != nil {
-		return []NetworkHost{}, err
+		return nil, fmt.Errorf("Failed to dial: %s", err)
 	}
 
-	for _, e := range sr.Entries {
-		h := NetworkHost{}
-		h.Environment = z.Environment
+	// session, err := connection.NewSession()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("Failed to create session: %s", err)
+	// }
+	//
+	// stdin, err := session.StdinPipe()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("Unable to setup stdin for session: %v", err)
+	// }
+	// go io.Copy(stdin, os.Stdin)
+	//
+	// stdout, err := session.StdoutPipe()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("Unable to setup stdout for session: %v", err)
+	// }
+	// go io.Copy(os.Stdout, stdout)
+	//
+	// stderr, err := session.StderrPipe()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("Unable to setup stderr for session: %v", err)
+	// }
+	// go io.Copy(os.Stderr, stderr)
+	//
+	// err = session.Run("ls -l")
+	// if err != nil {
+	// 	log.Error(err)
+	// }
+	//
+	// out, err := session.CombinedOutput("ls -l")
+	// if err != nil {
+	// 	log.Error(err)
+	// }
+	//
+	// log.Info(out)
+	log.Debugf("Connection: %+v", connection)
 
-		for _, a := range e.Attributes {
+	return nil, nil
+}
 
-			switch a.Name {
-			case "cn":
-				{
-					h.Name = stringValues(a)[0]
-				}
-			case "netHostPlatform":
-				{
-					h.Platform = stringValues(a)[0]
-				}
-			case "netHostType":
-				{
-					h.DeviceType = stringValues(a)[0]
-				}
-			case "netHostRole":
-				{
-					h.Role = stringValues(a)[0]
-				}
-			case "netHostGroup":
-				{
-					h.Group = stringValues(a)[0]
-				}
-			case "netHostName":
-				{
-					h.HostName = stringValues(a)[0]
-				}
-			case "netHostDomain":
-				{
-					h.Domain = stringValues(a)[0]
-				}
-			case "netHostWatch":
-				{
-					h.Watch = boolValues(a)[0]
-				}
-			case "netHostDescription":
-				{
-					h.Description = stringValues(a)[0]
-				}
-			case "macAddress":
-				{
-					addrs := []string{}
-					addrs = append(addrs, stringValues(a)...)
-					h.MACAddress = addrs
-				}
-			}
-		}
+func SSHAgent() ssh.AuthMethod {
+	if sshAgent, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
+		return ssh.PublicKeysCallback(agent.NewClient(sshAgent).Signers)
+	}
+	return nil
+}
 
-		hosts = append(hosts, h)
+func PublicKeyFile(file string) ssh.AuthMethod {
+	buffer, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil
 	}
 
-	return hosts, nil
+	key, err := ssh.ParsePrivateKey(buffer)
+	if err != nil {
+		return nil
+	}
+	return ssh.PublicKeys(key)
 }

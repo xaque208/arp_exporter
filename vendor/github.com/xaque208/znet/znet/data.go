@@ -151,6 +151,7 @@ type AEInterface struct {
 	} `yaml:"options"`
 	EthernetSwitching EthernetSwitching `yaml:"ethernet_switching"`
 	Units             []InetUnit        `yaml:"units,omitempty"`
+	NativeVlanId      int               `yaml:"native_vlan_id"`
 }
 
 type EthernetInterface struct {
@@ -160,6 +161,7 @@ type EthernetInterface struct {
 	MTU               int               `yaml:"mtu"`
 	Name              string            `yaml:"name"`
 	NativeVlanId      int               `yaml:"native_vlan_id"`
+	Units             []InetUnit        `yaml:"units"`
 }
 
 type EthernetSwitching struct {
