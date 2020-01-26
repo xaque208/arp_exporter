@@ -41,18 +41,16 @@
   version = "v1.4.7"
 
 [[projects]]
-  name = "github.com/go-redis/redis"
-  packages = [
-    ".",
-    "internal",
-    "internal/consistenthash",
-    "internal/hashtag",
-    "internal/pool",
-    "internal/proto",
-    "internal/util"
-  ]
-  revision = "c5c4ad6a4cae24f3867af1a0513709fc944a87f3"
-  version = "v6.15.4"
+  name = "github.com/go-asn1-ber/asn1-ber"
+  packages = ["."]
+  revision = "29be175fc3a3b1787c008093b829fbfee40decd6"
+  version = "v1.4"
+
+[[projects]]
+  name = "github.com/go-ldap/ldap"
+  packages = ["."]
+  revision = "a4f79d8a7cda1dcfbe9efafbd1e1621608881e93"
+  version = "v3.1.5"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -326,6 +324,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/tcnksm/go-input"
+  packages = ["."]
+  revision = "548a7d7a8ee8fcb3d013fae6acf857da56165975"
+
+[[projects]]
+  branch = "master"
   name = "github.com/xaque208/rftoy"
   packages = ["rftoy"]
   revision = "4727b87c34619533519abb4260afd477833e265b"
@@ -337,13 +341,13 @@
   revision = "32b63548ad25b007268340d9dde0b7319f184e4f"
 
 [[projects]]
-  branch = "master"
   name = "github.com/xaque208/znet"
   packages = [
     "rpc",
     "znet"
   ]
-  revision = "64470dd6799d5be447a44a0eee9d670e6efd76b0"
+  revision = "d885f756e0a3b536c5d3c7d25b451f5e2c19b153"
+  version = "v0.6.2"
 
 [[projects]]
   branch = "master"
@@ -363,7 +367,8 @@
     "pbkdf2",
     "poly1305",
     "ssh",
-    "ssh/agent"
+    "ssh/agent",
+    "ssh/terminal"
   ]
   revision = "9756ffdc24725223350eb3266ffb92590d28f278"
 
@@ -475,18 +480,6 @@
   packages = ["."]
   revision = "947dcec5ba9c011838740e680966fd7087a71d0d"
   version = "v2.2.6"
-
-[[projects]]
-  name = "gopkg.in/asn1-ber.v1"
-  packages = ["."]
-  revision = "f715ec2f112d1e4195b827ad68cf44017a3ef2b1"
-  version = "v1.3"
-
-[[projects]]
-  name = "gopkg.in/ldap.v2"
-  packages = ["."]
-  revision = "bb7a9ca6e4fbc2129e3db588a34bc970ffe811a9"
-  version = "v2.5.1"
 
 [[projects]]
   name = "gopkg.in/square/go-jose.v2"

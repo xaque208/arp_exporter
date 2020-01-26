@@ -3,8 +3,8 @@ package znet
 import (
 	"fmt"
 
+	ldap "github.com/go-ldap/ldap"
 	log "github.com/sirupsen/logrus"
-	ldap "gopkg.in/ldap.v2"
 )
 
 type Inventory struct {
@@ -29,7 +29,11 @@ func (i *Inventory) NetworkHosts() ([]NetworkHost, error) {
 		nil,
 	)
 
-	log.Infof("Searching LDAP base %s with query: %s", i.config.BaseDN, searchRequest.Filter)
+	log.Debugf("Searching LDAP base %s with query: %s", i.config.BaseDN, searchRequest.Filter)
+
+	if i.ldapClient.IsClosing() {
+		log.Warnf("LDAP connection is closing")
+	}
 
 	sr, err := i.ldapClient.Search(searchRequest)
 	if err != nil {
@@ -83,6 +87,57 @@ func (i *Inventory) NetworkHosts() ([]NetworkHost, error) {
 					addrs := []string{}
 					addrs = append(addrs, stringValues(a)...)
 					h.MACAddress = addrs
+				}
+			}
+		}
+
+		hosts = append(hosts, h)
+	}
+
+	return hosts, nil
+}
+
+func (i *Inventory) UnknownHosts() ([]UnknownHost, error) {
+
+	if i.ldapClient == nil {
+		return []UnknownHost{}, fmt.Errorf("unable to use nil LDAP client")
+	}
+
+	hosts := []UnknownHost{}
+
+	searchRequest := ldap.NewSearchRequest(
+		i.config.BaseDN,
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		"(&(objectClass=unknownNetHost)(cn=*))",
+		unknownHostDefaultAttributes,
+		nil,
+	)
+
+	log.Debugf("Searching LDAP base %s with query: %s", i.config.BaseDN, searchRequest.Filter)
+
+	sr, err := i.ldapClient.Search(searchRequest)
+	if err != nil {
+		return []UnknownHost{}, err
+	}
+
+	for _, e := range sr.Entries {
+		h := UnknownHost{}
+
+		for _, a := range e.Attributes {
+			switch a.Name {
+			case "cn":
+				{
+					h.Name = stringValues(a)[0]
+				}
+			case "v4Address":
+				{
+					h.IP = stringValues(a)[0]
+				}
+			case "macAddress":
+				{
+					addrs := []string{}
+					addrs = append(addrs, stringValues(a)...)
+					h.MACAddress = addrs[0]
 				}
 			}
 		}
