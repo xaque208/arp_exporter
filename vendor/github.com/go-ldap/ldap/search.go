@@ -1,3 +1,58 @@
+// File contains Search functionality
+//
+// https://tools.ietf.org/html/rfc4511
+//
+//         SearchRequest ::= [APPLICATION 3] SEQUENCE {
+//              baseObject      LDAPDN,
+//              scope           ENUMERATED {
+//                   baseObject              (0),
+//                   singleLevel             (1),
+//                   wholeSubtree            (2),
+//                   ...  },
+//              derefAliases    ENUMERATED {
+//                   neverDerefAliases       (0),
+//                   derefInSearching        (1),
+//                   derefFindingBaseObj     (2),
+//                   derefAlways             (3) },
+//              sizeLimit       INTEGER (0 ..  maxInt),
+//              timeLimit       INTEGER (0 ..  maxInt),
+//              typesOnly       BOOLEAN,
+//              filter          Filter,
+//              attributes      AttributeSelection }
+//
+//         AttributeSelection ::= SEQUENCE OF selector LDAPString
+//                         -- The LDAPString is constrained to
+//                         -- <attributeSelector> in Section 4.5.1.8
+//
+//         Filter ::= CHOICE {
+//              and             [0] SET SIZE (1..MAX) OF filter Filter,
+//              or              [1] SET SIZE (1..MAX) OF filter Filter,
+//              not             [2] Filter,
+//              equalityMatch   [3] AttributeValueAssertion,
+//              substrings      [4] SubstringFilter,
+//              greaterOrEqual  [5] AttributeValueAssertion,
+//              lessOrEqual     [6] AttributeValueAssertion,
+//              present         [7] AttributeDescription,
+//              approxMatch     [8] AttributeValueAssertion,
+//              extensibleMatch [9] MatchingRuleAssertion,
+//              ...  }
+//
+//         SubstringFilter ::= SEQUENCE {
+//              type           AttributeDescription,
+//              substrings     SEQUENCE SIZE (1..MAX) OF substring CHOICE {
+//                   initial [0] AssertionValue,  -- can occur at most once
+//                   any     [1] AssertionValue,
+//                   final   [2] AssertionValue } -- can occur at most once
+//              }
+//
+//         MatchingRuleAssertion ::= SEQUENCE {
+//              matchingRule    [1] MatchingRuleId OPTIONAL,
+//              type            [2] AttributeDescription OPTIONAL,
+//              matchValue      [3] AssertionValue,
+//              dnAttributes    [4] BOOLEAN DEFAULT FALSE }
+//
+//
+
 package ldap
 
 import (
@@ -6,7 +61,7 @@ import (
 	"sort"
 	"strings"
 
-	ber "github.com/go-asn1-ber/asn1-ber"
+	"gopkg.in/asn1-ber.v1"
 )
 
 // scope choices
@@ -191,33 +246,27 @@ type SearchRequest struct {
 	Controls     []Control
 }
 
-func (req *SearchRequest) appendTo(envelope *ber.Packet) error {
-	pkt := ber.Encode(ber.ClassApplication, ber.TypeConstructed, ApplicationSearchRequest, nil, "Search Request")
-	pkt.AppendChild(ber.NewString(ber.ClassUniversal, ber.TypePrimitive, ber.TagOctetString, req.BaseDN, "Base DN"))
-	pkt.AppendChild(ber.NewInteger(ber.ClassUniversal, ber.TypePrimitive, ber.TagEnumerated, uint64(req.Scope), "Scope"))
-	pkt.AppendChild(ber.NewInteger(ber.ClassUniversal, ber.TypePrimitive, ber.TagEnumerated, uint64(req.DerefAliases), "Deref Aliases"))
-	pkt.AppendChild(ber.NewInteger(ber.ClassUniversal, ber.TypePrimitive, ber.TagInteger, uint64(req.SizeLimit), "Size Limit"))
-	pkt.AppendChild(ber.NewInteger(ber.ClassUniversal, ber.TypePrimitive, ber.TagInteger, uint64(req.TimeLimit), "Time Limit"))
-	pkt.AppendChild(ber.NewBoolean(ber.ClassUniversal, ber.TypePrimitive, ber.TagBoolean, req.TypesOnly, "Types Only"))
+func (s *SearchRequest) encode() (*ber.Packet, error) {
+	request := ber.Encode(ber.ClassApplication, ber.TypeConstructed, ApplicationSearchRequest, nil, "Search Request")
+	request.AppendChild(ber.NewString(ber.ClassUniversal, ber.TypePrimitive, ber.TagOctetString, s.BaseDN, "Base DN"))
+	request.AppendChild(ber.NewInteger(ber.ClassUniversal, ber.TypePrimitive, ber.TagEnumerated, uint64(s.Scope), "Scope"))
+	request.AppendChild(ber.NewInteger(ber.ClassUniversal, ber.TypePrimitive, ber.TagEnumerated, uint64(s.DerefAliases), "Deref Aliases"))
+	request.AppendChild(ber.NewInteger(ber.ClassUniversal, ber.TypePrimitive, ber.TagInteger, uint64(s.SizeLimit), "Size Limit"))
+	request.AppendChild(ber.NewInteger(ber.ClassUniversal, ber.TypePrimitive, ber.TagInteger, uint64(s.TimeLimit), "Time Limit"))
+	request.AppendChild(ber.NewBoolean(ber.ClassUniversal, ber.TypePrimitive, ber.TagBoolean, s.TypesOnly, "Types Only"))
 	// compile and encode filter
-	filterPacket, err := CompileFilter(req.Filter)
+	filterPacket, err := CompileFilter(s.Filter)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	pkt.AppendChild(filterPacket)
+	request.AppendChild(filterPacket)
 	// encode attributes
 	attributesPacket := ber.Encode(ber.ClassUniversal, ber.TypeConstructed, ber.TagSequence, nil, "Attributes")
-	for _, attribute := range req.Attributes {
+	for _, attribute := range s.Attributes {
 		attributesPacket.AppendChild(ber.NewString(ber.ClassUniversal, ber.TypePrimitive, ber.TagOctetString, attribute, "Attribute"))
 	}
-	pkt.AppendChild(attributesPacket)
-
-	envelope.AppendChild(pkt)
-	if len(req.Controls) > 0 {
-		envelope.AppendChild(encodeControls(req.Controls))
-	}
-
-	return nil
+	request.AppendChild(attributesPacket)
+	return request, nil
 }
 
 // NewSearchRequest creates a new search request
@@ -317,7 +366,22 @@ func (l *Conn) SearchWithPaging(searchRequest *SearchRequest, pagingSize uint32)
 
 // Search performs the given search request
 func (l *Conn) Search(searchRequest *SearchRequest) (*SearchResult, error) {
-	msgCtx, err := l.doRequest(searchRequest)
+	packet := ber.Encode(ber.ClassUniversal, ber.TypeConstructed, ber.TagSequence, nil, "LDAP Request")
+	packet.AppendChild(ber.NewInteger(ber.ClassUniversal, ber.TypePrimitive, ber.TagInteger, l.nextMessageID(), "MessageID"))
+	// encode search request
+	encodedSearchRequest, err := searchRequest.encode()
+	if err != nil {
+		return nil, err
+	}
+	packet.AppendChild(encodedSearchRequest)
+	// encode search controls
+	if len(searchRequest.Controls) > 0 {
+		packet.AppendChild(encodeControls(searchRequest.Controls))
+	}
+
+	l.Debug.PrintPacket(packet)
+
+	msgCtx, err := l.sendMessage(packet)
 	if err != nil {
 		return nil, err
 	}
@@ -328,10 +392,24 @@ func (l *Conn) Search(searchRequest *SearchRequest) (*SearchResult, error) {
 		Referrals: make([]string, 0),
 		Controls:  make([]Control, 0)}
 
-	for {
-		packet, err := l.readPacket(msgCtx)
+	foundSearchResultDone := false
+	for !foundSearchResultDone {
+		l.Debug.Printf("%d: waiting for response", msgCtx.id)
+		packetResponse, ok := <-msgCtx.responses
+		if !ok {
+			return nil, NewError(ErrorNetwork, errors.New("ldap: response channel closed"))
+		}
+		packet, err = packetResponse.ReadPacket()
+		l.Debug.Printf("%d: got response %p", msgCtx.id, packet)
 		if err != nil {
 			return nil, err
+		}
+
+		if l.Debug {
+			if err := addLDAPDescriptions(packet); err != nil {
+				return nil, err
+			}
+			ber.PrintPacket(packet)
 		}
 
 		switch packet.Children[1].Tag {
@@ -362,9 +440,11 @@ func (l *Conn) Search(searchRequest *SearchRequest) (*SearchResult, error) {
 					result.Controls = append(result.Controls, decodedChild)
 				}
 			}
-			return result, nil
+			foundSearchResultDone = true
 		case 19:
 			result.Referrals = append(result.Referrals, packet.Children[1].Children[0].Value.(string))
 		}
 	}
+	l.Debug.Printf("%d: returning", msgCtx.id)
+	return result, nil
 }

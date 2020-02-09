@@ -17,7 +17,6 @@ GOTOOLS       = github.com/axw/gocov/gocov \
 GO            = go
 GODOC         = godocdown
 GOLINTER      = golangci-lint
-GOVENDOR      = dep
 
 # Determine packages by looking into pkg/*
 PACKAGES=$(wildcard ${SRCDIR}/pkg/*)
@@ -55,7 +54,7 @@ deps: tools deps-only
 
 deps-only:
 	@echo "=== $(PROJECT_NAME) === [ deps             ]: Installing package dependencies required by the project..."
-	@$(GOVENDOR) ensure
+	@$(GO) mod vendor
 
 validate: deps
 	@echo "=== $(PROJECT_NAME) === [ validate         ]: Validating source code running $(GOLINTER)..."
