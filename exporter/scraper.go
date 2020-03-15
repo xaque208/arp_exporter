@@ -100,7 +100,7 @@ func ScrapeMetrics(auth *junos.AuthMethod, hosts []znet.NetworkHost, unknownChan
 			now := time.Now()
 
 			// go func() {
-			log.Infof("Scraping host: %s", h.HostName)
+			log.Debugf("Scraping host: %s", h.HostName)
 			session, err := junos.NewSession(h.HostName, auth)
 			if err != nil {
 				log.Error(err)
